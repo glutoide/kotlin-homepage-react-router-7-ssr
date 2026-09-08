@@ -1,0 +1,9 @@
+Source project:
+https://github.com/JetBrains/kotlin-web-site-jetsites-internship-2026
+
+Reference commit used for migration and CI visual parity:
+84328b92e50be7723b28984232caba97d0a4511e
+
+The files under public/original-assets were copied from the supplied JetBrains test project and remain subject to the license included in THIRD_PARTY_LICENSES/JetBrains-kotlin-web-site-LICENSE.txt.
+
+The JetBrains Mono WOFF2 files under public/assets/fonts/JetBrainsMono are copied byte-for-byte from the same pinned reference commit. They are served locally at the same URL family used by the supplied page; no runtime font CDN is required. JetBrains Mono is licensed under SIL Open Font License 1.1; see THIRD_PARTY_LICENSES/JetBrainsMono-OFL.txt.
