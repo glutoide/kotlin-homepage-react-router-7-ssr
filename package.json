@@ -1,0 +1,57 @@
+{
+  "name": "kotlin-homepage-react-router-7-ssr",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "react-router dev",
+    "build": "react-router build",
+    "start": "react-router-serve ./build/server/index.js",
+    "typecheck": "react-router typegen && tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "verify": "npm run audit:static && npm run typecheck && npm test && npm run build && npm run test:e2e && npm run audit:security",
+    "audit:static": "node verification/static-audit.mjs",
+    "test:visual": "playwright test tests/visual-parity.spec.ts",
+    "audit:security": "npm audit --audit-level=low"
+  },
+  "dependencies": {
+    "@jetbrains/kotlin-web-site-ui": "4.14.9",
+    "@react-hook/resize-observer": "1.2.5",
+    "@react-router/node": "7.18.3",
+    "@react-router/serve": "7.18.3",
+    "@rescui/button": "0.25.1",
+    "@rescui/card": "0.15.1",
+    "@rescui/switcher": "0.14.1",
+    "@rescui/tab-list": "0.19.1",
+    "@rescui/typography": "0.28.1",
+    "@rescui/ui-contexts": "0.7.0",
+    "body-scroll-lock": "4.0.0-beta.0",
+    "classnames": "2.5.1",
+    "highlight.js": "10.5.0",
+    "isbot": "5.1.32",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-router": "7.18.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.55.1",
+    "@react-router/dev": "7.18.3",
+    "@testing-library/jest-dom": "6.8.0",
+    "@testing-library/react": "16.3.0",
+    "@types/node": "22.15.30",
+    "@types/react": "18.3.23",
+    "@types/react-dom": "18.3.7",
+    "jsdom": "26.1.0",
+    "sass": "1.89.2",
+    "typescript": "5.8.3",
+    "vite": "6.4.3",
+    "vitest": "3.2.7"
+  },
+  "overrides": {
+    "qs": "6.16.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
