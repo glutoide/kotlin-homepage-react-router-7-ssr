@@ -1,0 +1,10 @@
+FROM node:16-bullseye
+
+WORKDIR /app
+COPY reference-project/package.json reference-project/yarn.lock ./
+RUN corepack enable \
+    && corepack prepare yarn@1.22.22 --activate \
+    && yarn install --frozen-lockfile
+
+EXPOSE 9000
+CMD ["yarn", "start"]
