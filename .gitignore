@@ -6,4 +6,4 @@ build/
 # Playwright runtime artifacts
 playwright-report/
 test-results/
-tests/**/**-snapshots/
+tests/**/*-snapshots/
