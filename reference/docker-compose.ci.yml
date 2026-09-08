@@ -1,0 +1,26 @@
+services:
+  website:
+    build:
+      context: ..
+      dockerfile: reference/Dockerfile.backend
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../reference-project:/src
+      - /src/node_modules
+    working_dir: /src
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: reference/Dockerfile.frontend
+    ports:
+      - "9000:9000"
+    volumes:
+      - ../reference-project:/app
+      - /app/node_modules
+    environment:
+      - BACKEND_HOST=website:8080
+      - DEV_SERVER_HOST=0.0.0.0
+    depends_on:
+      - website
