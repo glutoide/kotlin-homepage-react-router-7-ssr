@@ -20,6 +20,8 @@ jobs:
     steps:
       - name: Checkout migration
         uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
       - name: Checkout supplied reference
         uses: actions/checkout@v5
@@ -80,8 +82,12 @@ jobs:
         run: docker compose -f reference/docker-compose.ci.yml down --volumes --remove-orphans
 
   repro-node22:
-    if: ${{ false }} # GitHub-hosted spending disabled pending self-hosted port
-    runs-on: ubuntu-24.04
+    # Public repo: never execute external PR code on an owner's home laptop.
+    if: >-
+      github.actor == 'glutoide' &&
+      (github.event_name != 'pull_request' ||
+       github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: [self-hosted, Windows, X64, glutoide-pool]
     timeout-minutes: 15
 
     steps:
