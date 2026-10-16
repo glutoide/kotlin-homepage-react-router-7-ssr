@@ -13,6 +13,7 @@ concurrency:
 
 jobs:
   test:
+    if: ${{ false }} # GitHub-hosted spending disabled pending self-hosted port
     runs-on: ubuntu-24.04
     timeout-minutes: 30
 
@@ -79,6 +80,7 @@ jobs:
         run: docker compose -f reference/docker-compose.ci.yml down --volumes --remove-orphans
 
   repro-node22:
+    if: ${{ false }} # GitHub-hosted spending disabled pending self-hosted port
     runs-on: ubuntu-24.04
     timeout-minutes: 15
 
