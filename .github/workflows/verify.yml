@@ -13,9 +13,16 @@ concurrency:
 
 jobs:
   test:
-    if: ${{ false }} # GitHub-hosted spending disabled pending self-hosted port
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    # A public fork must not run external PR code on the owner's personal laptop.
+    if: >-
+      github.actor == 'glutoide' &&
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [personal-kotlin]
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: pwsh
 
     steps:
       - name: Checkout migration
@@ -40,23 +47,32 @@ jobs:
         run: npm ci
 
       - name: Install Playwright Chromium
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
+
+      - name: Require an available Linux Docker daemon for pinned reference
+        run: |
+          if (-not (Get-Command docker -ErrorAction SilentlyContinue)) { throw 'Docker CLI is required for exact pinned reference parity' }
+          $os = & docker info --format '{{.OSType}}'
+          if ($LASTEXITCODE -ne 0 -or $os.Trim() -ne 'linux') { throw 'An accessible Linux Docker engine is required for reference parity' }
 
       - name: Start supplied reference project
         run: docker compose -f reference/docker-compose.ci.yml up -d --build
 
       - name: Wait for supplied reference
-        shell: bash
         run: |
-          for attempt in {1..90}; do
-            if curl --fail --silent --show-error http://127.0.0.1:9000/ > /dev/null; then
-              exit 0
-            fi
-            sleep 2
-          done
-          docker compose -f reference/docker-compose.ci.yml ps
-          docker compose -f reference/docker-compose.ci.yml logs --no-color
-          exit 1
+          $ready = $false
+          for ($attempt = 1; $attempt -le 90; $attempt++) {
+            try {
+              $response = Invoke-WebRequest -Uri 'http://127.0.0.1:9000/' -UseBasicParsing -TimeoutSec 3
+              if ($response.StatusCode -eq 200) { $ready = $true; break }
+            } catch { }
+            Start-Sleep -Seconds 2
+          }
+          if (-not $ready) {
+            docker compose -f reference/docker-compose.ci.yml ps
+            docker compose -f reference/docker-compose.ci.yml logs --no-color
+            throw 'Pinned reference did not become healthy on port 9000'
+          }
 
       - name: Verify migration against reference
         env:
