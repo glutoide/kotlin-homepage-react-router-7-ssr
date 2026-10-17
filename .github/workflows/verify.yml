@@ -30,6 +30,13 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Checkout supplied reference
+        uses: actions/checkout@v5
+        with:
+          repository: JetBrains/kotlin-web-site-jetsites-internship-2026
+          ref: 84328b92e50be7723b28984232caba97d0a4511e
+          path: reference-project
+
       - name: Use Node.js 20
         uses: actions/setup-node@v5
         with:
@@ -42,10 +49,34 @@ jobs:
       - name: Install Playwright Chromium
         run: npx playwright install chromium
 
-      # Exact visual comparison to the pinned JetBrains legacy reference needs
-      # Docker Linux images, unavailable on this Windows service runner.
-      # Keep visual-parity as an explicit unverified gate, not a fake PASS.
-      - name: Verify SSR, hydration, browser interactions, tests and security
+      - name: Require an available Linux Docker daemon for pinned reference
+        run: |
+          if (-not (Get-Command docker -ErrorAction SilentlyContinue)) { throw 'Docker CLI is required for exact pinned reference parity' }
+          $os = & docker info --format '{{.OSType}}'
+          if ($LASTEXITCODE -ne 0 -or $os.Trim() -ne 'linux') { throw 'An accessible Linux Docker engine is required for reference parity' }
+
+      - name: Start supplied reference project
+        run: docker compose -f reference/docker-compose.ci.yml up -d --build
+
+      - name: Wait for supplied reference
+        run: |
+          $ready = $false
+          for ($attempt = 1; $attempt -le 90; $attempt++) {
+            try {
+              $response = Invoke-WebRequest -Uri 'http://127.0.0.1:9000/' -UseBasicParsing -TimeoutSec 3
+              if ($response.StatusCode -eq 200) { $ready = $true; break }
+            } catch { }
+            Start-Sleep -Seconds 2
+          }
+          if (-not $ready) {
+            docker compose -f reference/docker-compose.ci.yml ps
+            docker compose -f reference/docker-compose.ci.yml logs --no-color
+            throw 'Pinned reference did not become healthy on port 9000'
+          }
+
+      - name: Verify migration against reference
+        env:
+          REFERENCE_BASE_URL: http://127.0.0.1:9000/
         run: npm run verify
 
       - name: Upload Playwright report on failure
@@ -57,6 +88,14 @@ jobs:
             playwright-report/
             test-results/
           if-no-files-found: ignore
+
+      - name: Reference logs on failure
+        if: failure()
+        run: docker compose -f reference/docker-compose.ci.yml logs --no-color
+
+      - name: Stop supplied reference
+        if: always()
+        run: docker compose -f reference/docker-compose.ci.yml down --volumes --remove-orphans
 
   repro-node22:
     # Public repo: never execute external PR code on an owner's home laptop.
